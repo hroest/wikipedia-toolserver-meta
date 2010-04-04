@@ -22,7 +22,13 @@ logfile.write( '\tstart time %s\n' % now)
 #we create the new data for this month
 db = MySQLdb.connect(read_default_file="/home/hroest/.my.cnf")
 create_flagged_data.create_data( db, this_year, this_month )
-logfile.write( '\tupdated files for %s%s\n' % (this_year, this_month) )
+logfile.write( '\tupdated flagged files for %s%s\n' % (this_year, this_month) )
+
+latest_file = '/home/hroest/flagged_data/latest_actualisation' 
+f = open(latest_file , 'w'); 
+f.write( str( now ) + '\n'  ) 
+f.close() 
+
 
 #every new month we need to do the old month for good
 if today.day < 3: 
@@ -32,7 +38,8 @@ if today.day < 3:
         old_month = 12
         old_year = this_year - 1
     create_flagged_data.create_data( db, old_year, old_month )
-    logfile.write( '\tupdated files for %s%s\n' % (old_year, old_month) )
+    logfile.write( '\tupdated flagged files for %s%s\n' % (old_year, old_month))
 
+now = datetime.datetime.now()
 logfile.write( '\tend time %s\n' % now)
 logfile.close()

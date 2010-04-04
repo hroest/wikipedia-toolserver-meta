@@ -14,8 +14,8 @@ def create_data(db, year, month):
     """ % (year, month)
 
     myfile = '/home/hroest/flagged_data/all_month_users_%s%02d'% (year, month )
-    print myfile
-    f = open(myfile, 'w')
+    f = open(myfile + '_tmp', 'w')
+    print "writing into " , f.name
     cursor = db.cursor()
     cursor.execute( query )
     rows = cursor.fetchall()
@@ -23,3 +23,11 @@ def create_data(db, year, month):
     for r in rows:
         f.write( '%s\t%s\n' % (r[0], r[1]) )
     f.close()
+
+    #after closing we move the tmp file to the real location
+    import os
+    print 'moving now'
+    cmd  = 'mv %s %s' % (myfile + '_tmp', myfile )
+    print cmd
+    os.system( cmd )
+
