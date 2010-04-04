@@ -95,3 +95,34 @@ def never_reviewed_pages(db):
     c.execute( query )
     return c.fetchone()[0]
 
+def insert_db(db):
+    cursor = db.cursor()
+    now = datetime.datetime.now()
+    never_reviewed = never_reviewed_pages(db)
+    myHist, timestamps, query_time = execute_unreviewed_changes_query(db)
+    median = timestamps[ len(timestamps) / 2 ]
+    P75 = timestamps[ len(timestamps) * 1 / 4 ]
+    P95 = timestamps[ len(timestamps) * 1 / 20 ]
+    mean = sum(timestamps) / len( timestamps )
+    timestamp = time.mktime(now.timetuple())
+    mydist = 'myHist = ' + str(myHist)
+    #
+    query = """
+    insert into u_hroest.replag (
+     r_timestamp,
+     r_daily_distr,
+     r_median,
+     r_P75,
+     r_P95,
+     r_mean,
+     r_unreviewed,
+     r_neverreviewed
+    ) VALUES (%s, '%s',  %s,%s,%s,%s,%s,%s)
+    """ % ( int(timestamp) , mydist, median, 
+           P75, P95, mean, 
+           len( timestamps ), never_reviewed)
+    #
+    #f = open('tmp_mysql.query', 'w'); f.write( query ); f.close()
+    cursor.execute( query )
+    cursor.execute( 'commit;' )
+
