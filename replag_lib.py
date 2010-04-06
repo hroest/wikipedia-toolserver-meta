@@ -107,14 +107,34 @@ def create_plot(myHist):
     os.system("rm %s" % plot_name)
     os.system("rm %s" % replag_data)
 
-def revlag_color(db):
-    plot_name = 'tmp_revlagcolor'
-    data_file = 'tmp_revlagcolor_data'
-    pic_file =  '../tmp/pics/tmp_revlagcolor_pic'
+def revlag_color_cursor_lastweek(db):
+    cursor = db.cursor()
+    now = datetime.datetime.now()
+    now_unix = time.mktime( now.timetuple() )  
+    time_ago = now_unix - (7 * 24 * 3600)
+    cursor.execute( 'select * from u_hroest.replag where r_timestamp > %s' %
+                  time_ago )
+    return cursor
 
+def revlag_color_cursor_last24h(db):
+    cursor = db.cursor()
+    now = datetime.datetime.now()
+    now_unix = time.mktime( now.timetuple() )  
+    time_ago = now_unix - (24 * 3600)
+    cursor.execute( 'select * from u_hroest.replag where r_timestamp > %s' %
+                  time_ago )
+    return cursor
 
+def revlag_color_cursor_all(db):
     cursor = db.cursor()
     cursor.execute( 'select * from u_hroest.replag' )
+    return cursor
+
+def revlag_color_plot(cursor, plot_nr=0):
+    plot_name = 'tmp_revlagcolor%s' % plot_nr
+    data_file = 'tmp_revlagcolor_data%s' % plot_nr
+    pic_file =  '../tmp/pics/tmp_revlagcolor_pic%s' % plot_nr
+
     lines = cursor.fetchall()
 
     #f = open('test.out.csv', 'w')
@@ -145,13 +165,14 @@ def revlag_color(db):
 
     f.close()
 
+    size = 1000
     gnuplot = \
     """
-    set terminal png enhanced #size 800,800
+    set terminal png enhanced size %(size)s,%(size)s
     set xdata time
     set timefmt "%%Y-%%m-%%d-%%H-%%M"
     set format x "%%H:%%d.%%m.%%Y"
-    set xtics scale 3,2 nomirror rotate
+    set xtics scale 1,0 nomirror rotate
     set yrange[0:]
     set y2range[0:]
     set y2tics 0,1000
@@ -160,6 +181,7 @@ def revlag_color(db):
     set xlabel "Datum (H:d-m-Y)"
     set ylabel "Anzahl Artikel"
     set key outside 
+    set tics out
     set title "Verteilung des Alters der ungesichteten Aenderungen ueber Zeit"
     set output "%(pic_file)s"
     plot \
@@ -170,9 +192,7 @@ def revlag_color(db):
     "%(data_file)s" using 1:6 with filledcurve x1 title "younger than 3 days", \
     "%(data_file)s" using 1:7 with filledcurve x1 title "younger than 1 day" lt 7
     #"%(data_file)s" using 1:7 with filledcurve x1 title "younger than 1 day" lt -1
-           # fs pattern 2 lc palette cb -45
-            #fs pattern 2 lc rgb "#FF00FF"
-    """ % { 'data_file' : data_file, 'pic_file' : pic_file}
+    """ % { 'data_file' : data_file, 'pic_file' : pic_file, 'size' : size}
     #here work: lt -1, 7 
 
     f = open(plot_name, 'w')
