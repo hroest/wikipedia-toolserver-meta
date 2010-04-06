@@ -22,7 +22,7 @@ logfile.write( '\nrun started:\n')
 logfile.write( '\tstart time %s\n' % now)
 
 replag_lib.insert_db( db )
-logfile.write( '\tinserted row into db' )
+logfile.write( '\tinserted row into db\n' )
 
 now = datetime.datetime.now()
 logfile.write( '\tend time %s\n' % now)
