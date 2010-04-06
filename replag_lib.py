@@ -1,5 +1,5 @@
 import time
-import datetime
+import datetime 
 
 def execute_unreviewed_changes_query_fromCache(db):
     cursor = db.cursor()
@@ -107,6 +107,21 @@ def create_plot(myHist):
     os.system("rm %s" % plot_name)
     os.system("rm %s" % replag_data)
 
+def revlag_color_cursor_month(db, year, month):
+    cursor = db.cursor()
+    next_month = month + 1 
+    next_year = year
+    if next_month == 13: next_year = year + 1; next_month = 1
+    start = datetime.datetime( year, month, 1)
+    end = datetime.datetime( next_year, next_month, 1)
+
+    start_unix = time.mktime( start.timetuple() )  
+    end_unix = time.mktime( end.timetuple() )  - 1 #the new month minus one sec
+    cursor.execute( """ select * from u_hroest.replag 
+                   where r_timestamp between %s and %s""" %
+          (start_unix, end_unix )  )
+    return cursor
+
 def revlag_color_cursor_lastweek(db):
     cursor = db.cursor()
     now = datetime.datetime.now()
@@ -130,7 +145,7 @@ def revlag_color_cursor_all(db):
     cursor.execute( 'select * from u_hroest.replag' )
     return cursor
 
-def revlag_color_plot(cursor, plot_nr=0):
+def revlag_color_plot(cursor, plot_nr=0,plotsize=800):
     plot_name = 'tmp_revlagcolor%s' % plot_nr
     data_file = 'tmp_revlagcolor_data%s' % plot_nr
     pic_file =  '../tmp/pics/tmp_revlagcolor_pic%s' % plot_nr
@@ -165,7 +180,6 @@ def revlag_color_plot(cursor, plot_nr=0):
 
     f.close()
 
-    size = 1000
     gnuplot = \
     """
     set terminal png enhanced size %(size)s,%(size)s
@@ -192,7 +206,7 @@ def revlag_color_plot(cursor, plot_nr=0):
     "%(data_file)s" using 1:6 with filledcurve x1 title "younger than 3 days", \
     "%(data_file)s" using 1:7 with filledcurve x1 title "younger than 1 day" lt 7
     #"%(data_file)s" using 1:7 with filledcurve x1 title "younger than 1 day" lt -1
-    """ % { 'data_file' : data_file, 'pic_file' : pic_file, 'size' : size}
+    """ % { 'data_file' : data_file, 'pic_file' : pic_file, 'size' : plotsize}
     #here work: lt -1, 7 
 
     f = open(plot_name, 'w')
