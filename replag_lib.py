@@ -25,7 +25,7 @@ class revlag:
         self.mean =          l[6]
         self.unreviewed =     l[7]
         self.neverreviewed =     l[8]
-        self.longest_delay = len( self.myHist)
+        self.longest_delay = len( self.myHist) - 1
         #self.myHist.extend( [0 for i in range(100)])
         #self.cumulative = [sum( myHist[:i]) for i in range(len(myHist))]
 
@@ -41,6 +41,7 @@ def execute_unreviewed_changes_query(db):
     cursor = db.cursor()
     cursor.execute( 'use dewiki_p' )
 
+    resolution_hrs = 24
 
     start = time.time()
     cursor.execute( query )
@@ -59,7 +60,7 @@ def execute_unreviewed_changes_query(db):
         ll = l[-1]
         tuple = time.strptime(ll, "%Y%m%d%H%M%S")
         unix_lag = now_unix - time.mktime( tuple ) 
-        myHist[ int(unix_lag) / (3600*24) ] += 1
+        myHist[ int(unix_lag) / (3600* resolution_hrs ) ] += 1
         timestamps.append( unix_lag )
 
     #shorten myHist a bit so that there are fewer zeros
@@ -69,7 +70,7 @@ def execute_unreviewed_changes_query(db):
         i += 1
     myHist = myHist[ : 1000-i]
 
-    return myHist, timestamps, query_time
+    return lines, myHist, timestamps, query_time
 
 def create_plot(myHist):
     replag_data = 'replag_hist.csv' 
@@ -100,7 +101,7 @@ def create_plot(myHist):
     import os 
     os.system( "gnuplot %s" % plot_name )
 
-    print '<br/>' * 2
+    #print '<br/>' * 2
     print "<img src=\"%s\">" % pic_file
 
     #cleanup
@@ -145,14 +146,24 @@ def revlag_color_cursor_all(db):
     cursor.execute( 'select * from u_hroest.replag' )
     return cursor
 
+def revlag_color_lines_allXh(db, all_hours=6):
+    all_replicates = int( all_hours * 4 )
+    cursor = db.cursor()
+    cursor.execute( 'select * from u_hroest.replag' )
+    lines = cursor.fetchall()
+    return lines[::all_replicates] 
+
 def revlag_color_plot(cursor, plot_nr=0,plotsize=800):
+    lines = cursor.fetchall()
+    _revlag_color_plot(lines, plot_nr,plotsize)
+
+def _revlag_color_plot(lines, plot_nr=0,plotsize=800):
     plot_name = 'tmp_revlagcolor%s' % plot_nr
     data_file = 'tmp_revlagcolor_data%s' % plot_nr
     pic_file =  '../tmp/pics/tmp_revlagcolor_pic%s' % plot_nr
 
-    lines = cursor.fetchall()
 
-    #f = open('test.out.csv', 'w')
+
     f = open(data_file, 'w')
     for ii,l in enumerate(lines):
         timestamp = l[1]
@@ -243,7 +254,7 @@ def insert_db(db):
     cursor = db.cursor()
     now = datetime.datetime.now()
     never_reviewed = never_reviewed_pages(db)
-    myHist, timestamps, query_time = execute_unreviewed_changes_query(db)
+    lines, myHist, timestamps, query_time = execute_unreviewed_changes_query(db)
     median = timestamps[ len(timestamps) / 2 ]
     P75 = timestamps[ len(timestamps) * 1 / 4 ]
     P95 = timestamps[ len(timestamps) * 1 / 20 ]
@@ -268,5 +279,60 @@ def insert_db(db):
     #
     #f = open('tmp_mysql.query', 'w'); f.write( query ); f.close()
     cursor.execute( query )
+    last_id = db.insert_id()
     cursor.execute( 'commit;' )
+    #
+    mytime = 'timestamps = ' + str(timestamps)
+    query = """
+    insert into u_hroest.replagExtended (
+     r_replag_id ,
+     r_timestamps 
+     )  VALUES (%s, compress('%s') )
+     """ % ( last_id, mytime)
+    cursor.execute( query )
+    cursor.execute( 'commit;' )
+    #select r_replag_id, uncompress(r_timestamps) from u_hroest.replagExtended;
 
+###########################################################################
+###########################################################################
+###########################################################################
+
+def quick_fix_db():
+    cursor = replag_lib.revlag_color_cursor_all(db)
+    lines = cursor.fetchall()
+    import datetime
+    for ii,l in enumerate(lines):
+        timestamp = l[1]
+        dtime = datetime.datetime.fromtimestamp( timestamp )
+        dstring = dtime.strftime('%Y-%m-%d-%H-%M' )
+        exec( l[2] )
+        if timestamp > 1270978201: 
+            newHist = []
+            for i in range( 0, len( myHist), 8):
+                mysum =  sum( myHist[i:i+8] )
+                i, mysum
+                newHist.append( mysum )
+            myHist = newHist
+        median =        l[3]
+        P75 =           l[4]
+        P95 =           l[5]
+        mean =          l[6]
+        unreviewed =     l[7]
+        neverreviewed =     l[8]
+        mydist = 'myHist = ' + str(myHist)
+        query = """
+        insert into u_hroest.replag(
+         r_timestamp,
+         r_daily_distr,
+         r_median,
+         r_P75,
+         r_P95,
+         r_mean,
+         r_unreviewed,
+         r_neverreviewed
+        ) VALUES (%s, '%s',  %s,%s,%s,%s,%s,%s)
+        """ % ( int(timestamp) , mydist, median, 
+               P75, P95, mean, 
+               unreviewed, neverreviewed)
+        cursor.execute( query) 
+        cursor.execute( 'commit;' )
