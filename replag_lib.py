@@ -14,6 +14,7 @@ class revlag:
     def __init__(self, line = None):
         if line: self.init_with_line( line )
     def init_with_line(self, l ):
+        self.id        = l[0]
         self.timestamp = l[1]
         self.dtime = datetime.datetime.fromtimestamp( self.timestamp )
         self.dstring = self.dtime.strftime('%Y-%m-%d-%H-%M' )
@@ -28,6 +29,16 @@ class revlag:
         self.longest_delay = len( self.myHist) - 1
         #self.myHist.extend( [0 for i in range(100)])
         #self.cumulative = [sum( myHist[:i]) for i in range(len(myHist))]
+    def get_extended(self, db):
+        cursor = db.cursor()
+        cursor.execute( 
+            """select uncompress(r_timestamps) 
+                from u_hroest.replagExtended 
+                where r_replag_id = %s""" % self.id)
+        lines = cursor.fetchall()
+        l = lines[0] #expect one result
+        exec( l[0] )
+        self.timestamps = timestamps
 
 def execute_unreviewed_changes_query(db):
     query = """
@@ -72,10 +83,26 @@ def execute_unreviewed_changes_query(db):
 
     return lines, myHist, timestamps, query_time
 
-def create_plot(myHist):
+def create_hist_from_timestamps( timestamps, resolution_hrs):
+
+    bigNr = 10000
+    myHist = [0 for i in range( bigNr )]
+    for unix_lag in timestamps:
+        myHist[ int(unix_lag) / (3600* resolution_hrs ) ] += 1
+
+    #shorten myHist a bit so that there are fewer zeros
+    i= 0
+    for entry in reversed( myHist ):
+        if entry != 0: break
+        i += 1
+    myHist = myHist[ :  bigNr - i]
+    return myHist
+
+def create_plot(myHist, name='regular', xlabel=None):
+    if xlabel == None: xlabel = "Rueckstand in Tagen"
     replag_data = 'replag_hist.csv' 
     plot_name = 'replag_plot' 
-    pic_file =  '../tmp/pics/replag.png' 
+    pic_file =  '../tmp/pics/replag%s.png' % name
     f = open( replag_data, 'w')
     for i, entry in enumerate( myHist):
         f.write('%s\t%s\n' % (i, entry) )
@@ -85,14 +112,14 @@ def create_plot(myHist):
     graph_title = 'Verteilung des Alters der ungesichteten Aenderungen'
     gnuplot = """
     set terminal png enhanced #size 800,800
-    set xlabel "Rueckstand in Tagen"
+    set xlabel "%(xlabel)s"
     set ylabel "Anzahl Artikel"
     set output "%(pic_file)s"
     set title "%(graph_title)s"
     set xrange[-1:%(max_lag)s]
     plot "replag_hist.csv"  notitle with boxes lt -1 lw 2
     """ % { 'pic_file' : pic_file, 'graph_title' : graph_title, 
-           'max_lag' : len( myHist ) }
+           'max_lag' : len( myHist ), 'xlabel' : xlabel}
 
     f = open(plot_name, 'w')
     f.write( gnuplot)
@@ -108,6 +135,55 @@ def create_plot(myHist):
     os.system("rm %s" % plot_name)
     os.system("rm %s" % replag_data)
 
+def create_plot_kernel(myHist, name='regular', xlabel=None, h = 1.2):
+    if xlabel == None: xlabel = "Rueckstand in Tagen"
+    replag_data = 'replag_hist.csv' 
+    plot_name = 'replag_plot' 
+    pic_file =  '../tmp/pics/replag%s.png' % name
+
+    def K(x):
+        return (2*3.14)**(-0.5)*2.718**(-x*x*0.5)
+
+    mysmooth = []
+    for x,y in enumerate(myHist):
+        s = 0.0
+        for xi, yi in enumerate(myHist):
+            s += 1/h * K( (x-xi) / h ) * yi
+        mysmooth.append( s  )
+
+
+    f = open( replag_data, 'w')
+    for i, entry in enumerate( mysmooth ):
+        f.write('%s\t%s\n' % (i, entry) )
+
+    f.close()
+
+    graph_title = 'Verteilung des Alters der ungesichteten Aenderungen'
+    gnuplot = """
+    set terminal png enhanced #size 800,800
+    set xlabel "%(xlabel)s"
+    set ylabel "Anzahl Artikel"
+    set output "%(pic_file)s"
+    set title "%(graph_title)s"
+    set xrange[-1:%(max_lag)s]
+    plot "replag_hist.csv"  notitle with lines lt -1 lw 2
+    """ % { 'pic_file' : pic_file, 'graph_title' : graph_title, 
+           'max_lag' : len( myHist ), 'xlabel' : xlabel}
+
+    f = open(plot_name, 'w')
+    f.write( gnuplot)
+    f.close()
+
+    import os 
+    os.system( "gnuplot %s" % plot_name )
+
+    #print '<br/>' * 2
+    print "<img src=\"%s\">" % pic_file
+
+    #cleanup
+    #os.system("rm %s" % plot_name)
+    #os.system("rm %s" % replag_data)
+
 def revlag_color_cursor_month(db, year, month):
     cursor = db.cursor()
     next_month = month + 1 
@@ -121,6 +197,15 @@ def revlag_color_cursor_month(db, year, month):
     cursor.execute( """ select * from u_hroest.replag 
                    where r_timestamp between %s and %s""" %
           (start_unix, end_unix )  )
+    return cursor
+
+def revlag_color_cursor_lastseconds(db, seconds = 3600):
+    cursor = db.cursor()
+    now = datetime.datetime.now()
+    now_unix = time.mktime( now.timetuple() )  
+    time_ago = now_unix - ( seconds )
+    cursor.execute( 'select * from u_hroest.replag where r_timestamp > %s' %
+                  time_ago )
     return cursor
 
 def revlag_color_cursor_lastweek(db):
