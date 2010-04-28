@@ -20,24 +20,8 @@ cursor = db.cursor()
 insert_db( db )
 
 
-cursor.execute( 'select * from u_hroest.replag' )
-lines = cursor.fetchall()
 
-f = open('test.out.csv', 'w')
-for l in lines:
-    timestamp = l[1]
-    dtime = datetime.datetime.fromtimestamp( timestamp )
-    dstring = dtime.strftime('%Y-%m-%d-%H-%M' )
-    exec( l[2] )
-    median =     l[3]
-    P75 =     l[4]
-    P95 =     l[5]
-    mean =     l[6]
-    unreviewed =     l[7]
-    neverreviewed =     l[8]
-    f.write( '%s %s %s' % (dstring, unreviewed, neverreviewed))
 
-f.close()
 
 """
 
@@ -55,4 +39,11 @@ create table u_hroest.replag (
 );
 
 alter table u_hroest.replag add index(r_timestamp);
+
+
+create table u_hroest.replagExtended (
+ r_replag_id int primary key,
+ r_timestamps text
+);
+
 """

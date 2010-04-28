@@ -2,6 +2,7 @@
 import datetime
 import time 
 import MySQLdb
+import os
 
 import sys
 sys.path.append( '/home/hroest/')
@@ -23,6 +24,10 @@ logfile.write( '\tstart time %s\n' % now)
 
 replag_lib.insert_db( db )
 logfile.write( '\tinserted row into db\n' )
+
+os.system( 'touch /home/hroest/public_html/tmp/pics/tmp_mytmptmp')
+os.system( 'rm /home/hroest/public_html/tmp/pics/tmp*')
+logfile.write( '\tdeleted all pics like tmp/pics/tmp*\n' )
 
 now = datetime.datetime.now()
 logfile.write( '\tend time %s\n' % now)
