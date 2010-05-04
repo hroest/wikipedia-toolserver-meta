@@ -122,9 +122,13 @@ def create_plot(myHist, name='regular', xlabel=None, plot_lines=False):
     set output "%(pic_file)s"
     set title "%(graph_title)s"
     set xrange[-1:%(max_lag)s]
-    plot "replag_hist.csv"  notitle with boxes lt -1 lw 2
+    set yrange[0:]
+    set nokey
+    f(x)=600
+    g(x)=300
+    plot "replag_hist.csv"  notitle with boxes lt -1 lw 2 %(my_lines)s
     """ % { 'pic_file' : pic_file, 'graph_title' : graph_title, 
-           'max_lag' : len( myHist ), 'xlabel' : xlabel}
+           'max_lag' : len( myHist ), 'xlabel' : xlabel, 'my_lines' : my_lines}
 
     f = open(plot_name, 'w')
     f.write( gnuplot.encode( 'iso8859'))
@@ -325,6 +329,7 @@ def _revlag_color_plot(lines, plot_nr=0,plotsize=800):
     os.system("rm %s" % data_file)
 
 def never_reviewed_pages(db):
+    """Get the number of never reviewed articles at the current timepoint from the db."""
 
     query = """
     #select all articles that were never reviewed
@@ -341,6 +346,12 @@ def never_reviewed_pages(db):
     return c.fetchone()[0]
 
 def insert_db(db):
+    """This functions inserts the current lag distribution into the db.
+    
+    It will populate u_hroest.replag and u_hroest.replagExtended with 
+    some summary statistics values and the compressed whole timestamps of 
+    all unreviewed changes, from which the distribution can be recovered.
+    """
     cursor = db.cursor()
     now = datetime.datetime.now()
     never_reviewed = never_reviewed_pages(db)
