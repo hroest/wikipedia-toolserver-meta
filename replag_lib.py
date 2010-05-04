@@ -1,3 +1,5 @@
+ # -*- coding: utf-8  -*-
+
 import time
 import datetime 
 
@@ -98,8 +100,8 @@ def create_hist_from_timestamps( timestamps, resolution_hrs):
     myHist = myHist[ :  bigNr - i]
     return myHist
 
-def create_plot(myHist, name='regular', xlabel=None):
-    if xlabel == None: xlabel = "Rueckstand in Tagen"
+def create_plot(myHist, name='regular', xlabel=None, plot_lines=False):
+    if xlabel == None: xlabel = u"Rückstand in Tagen"
     replag_data = 'replag_hist.csv' 
     plot_name = 'replag_plot' 
     pic_file =  '../tmp/pics/replag%s.png' % name
@@ -109,7 +111,10 @@ def create_plot(myHist, name='regular', xlabel=None):
 
     f.close()
 
-    graph_title = 'Verteilung des Alters der ungesichteten Aenderungen'
+    my_lines = ""
+    if plot_lines: my_lines = ",f(x) w l lw 2 lt 2, g(x) w l lw 2 lt 3"
+
+    graph_title = u'Verteilung des Alters der ungesichteten Änderungen'
     gnuplot = """
     set terminal png enhanced #size 800,800
     set xlabel "%(xlabel)s"
@@ -122,7 +127,7 @@ def create_plot(myHist, name='regular', xlabel=None):
            'max_lag' : len( myHist ), 'xlabel' : xlabel}
 
     f = open(plot_name, 'w')
-    f.write( gnuplot)
+    f.write( gnuplot.encode( 'iso8859'))
     f.close()
 
     import os 
@@ -158,7 +163,7 @@ def create_plot_kernel(myHist, name='regular', xlabel=None, h = 1.2):
 
     f.close()
 
-    graph_title = 'Verteilung des Alters der ungesichteten Aenderungen'
+    graph_title = u'Verteilung des Alters der ungesichteten Änderungen'
     gnuplot = """
     set terminal png enhanced #size 800,800
     set xlabel "%(xlabel)s"
@@ -171,7 +176,7 @@ def create_plot_kernel(myHist, name='regular', xlabel=None, h = 1.2):
            'max_lag' : len( myHist ), 'xlabel' : xlabel}
 
     f = open(plot_name, 'w')
-    f.write( gnuplot)
+    f.write( gnuplot.encode( 'iso8859'))
     f.close()
 
     import os 
@@ -277,7 +282,7 @@ def _revlag_color_plot(lines, plot_nr=0,plotsize=800):
     f.close()
 
     gnuplot = \
-    """
+    u"""
     set terminal png enhanced size %(size)s,%(size)s
     set xdata time
     set timefmt "%%Y-%%m-%%d-%%H-%%M"
@@ -292,21 +297,21 @@ def _revlag_color_plot(lines, plot_nr=0,plotsize=800):
     set ylabel "Anzahl Artikel"
     set key outside 
     set tics out
-    set title "Verteilung des Alters der ungesichteten Aenderungen ueber Zeit"
+    set title "Verteilung des Alters der ungesichteten Änderungen über Zeit"
     set output "%(pic_file)s"
     plot \
     "%(data_file)s" using 1:2 with filledcurve x1 title "total", \
-    "%(data_file)s" using 1:3 with filledcurve x1 title "younger than 10 days",\
-    "%(data_file)s" using 1:4 with filledcurve x1 title "younger than 7 days", \
-    "%(data_file)s" using 1:5 with filledcurve x1 title "younger than 5 days", \
-    "%(data_file)s" using 1:6 with filledcurve x1 title "younger than 3 days", \
-    "%(data_file)s" using 1:7 with filledcurve x1 title "younger than 1 day" lt 7
+    "%(data_file)s" using 1:3 with filledcurve x1 title "jünger als 10 Tage",\
+    "%(data_file)s" using 1:4 with filledcurve x1 title "jünger als 7 Tage", \
+    "%(data_file)s" using 1:5 with filledcurve x1 title "jünger als 5 Tage", \
+    "%(data_file)s" using 1:6 with filledcurve x1 title "jünger als 3 Tage", \
+    "%(data_file)s" using 1:7 with filledcurve x1 title "jünger als 1 Tag" lt 7
     #"%(data_file)s" using 1:7 with filledcurve x1 title "younger than 1 day" lt -1
     """ % { 'data_file' : data_file, 'pic_file' : pic_file, 'size' : plotsize}
     #here work: lt -1, 7 
 
     f = open(plot_name, 'w')
-    f.write( gnuplot)
+    f.write( gnuplot.encode( 'iso8859'))
     f.close()
 
     import os 
