@@ -2,12 +2,16 @@
 import datetime
 import time 
 import MySQLdb
+import os
+
+
+
 
 import sys
 sys.path.append( '/home/hroest/')
 sys.path.append( '/home/hroest/scripts/')
 import create_flagged_data
-import os
+import general_lib
 
 today = datetime.date.today()
 now = datetime.datetime.now()
@@ -21,9 +25,11 @@ logfile = open('/home/hroest/nightly.log', 'a')
 logfile.write( '\nrun started:\n')
 logfile.write( '\tstart time %s\n' % now)
 
+got_lock = general_lib.acquire_pywiki_lock()
 os.system("sh /home/hroest/pywikipedia-folder/botpywikipedia/sichteroptin.sh")
 now = datetime.datetime.now()
-logfile.write( '\tfinished sichter: %s\n' % str(now) )
+logfile.write( '\tfinished sichter: %s with lock %s\n' % (str(now), got_lock) )
+if got_lock: general_lib.release_pywiki_lock()
 
 #we create the new data for this month
 db = MySQLdb.connect(read_default_file="/home/hroest/.my.cnf")

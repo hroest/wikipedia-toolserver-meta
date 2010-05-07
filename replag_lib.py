@@ -123,6 +123,7 @@ def create_plot(myHist, name='regular', xlabel=None, plot_lines=False):
     set output "%(pic_file)s"
     set title "%(graph_title)s"
     set xrange[-1:%(max_lag)s]
+    set xtics 0,1
     set yrange[0:]
     set nokey
     f(x)=600
