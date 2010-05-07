@@ -2,6 +2,7 @@
 
 import time
 import datetime 
+gnuplot_path = 'gnuplot'
 
 def execute_unreviewed_changes_query_fromCache(db):
     cursor = db.cursor()
@@ -135,13 +136,13 @@ def create_plot(myHist, name='regular', xlabel=None, plot_lines=False):
     f.close()
 
     import os 
-    os.system( "gnuplot %s" % plot_name )
+    os.system( "%s %s" % (gnuplot_path, plot_name ) ) 
 
     #print '<br/>' * 2
     print "<img src=\"%s\">" % pic_file
 
     #cleanup
-    os.system("rm %s" % plot_name)
+    #os.system("rm %s" % plot_name)
     os.system("rm %s" % replag_data)
 
 def create_plot_kernel(myHist, name='regular', xlabel=None, h = 1.2):
@@ -184,7 +185,7 @@ def create_plot_kernel(myHist, name='regular', xlabel=None, h = 1.2):
     f.close()
 
     import os 
-    os.system( "gnuplot %s" % plot_name )
+    os.system( "%s %s" % (gnuplot_path, plot_name ) ) 
 
     #print '<br/>' * 2
     print "<img src=\"%s\">" % pic_file
@@ -254,7 +255,7 @@ def revlag_color_plot(cursor, plot_nr=0,plotsize=800):
 def _revlag_color_plot(lines, plot_nr=0,plotsize=800):
     plot_name = 'tmp_revlagcolor%s' % plot_nr
     data_file = 'tmp_revlagcolor_data%s' % plot_nr
-    pic_file =  '../tmp/pics/tmp_revlagcolor_pic%s' % plot_nr
+    pic_file =  '../tmp/pics/tmp_revlagcolor_pic%s.png' % plot_nr
 
 
 
@@ -319,7 +320,7 @@ def _revlag_color_plot(lines, plot_nr=0,plotsize=800):
     f.close()
 
     import os 
-    os.system( "gnuplot %s" % plot_name )
+    os.system( "%s %s" % (gnuplot_path, plot_name ) ) 
 
     print '<br/>' * 2
     print "<img src=\"%s\">" % pic_file
