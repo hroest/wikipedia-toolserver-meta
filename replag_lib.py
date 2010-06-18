@@ -399,6 +399,15 @@ def insert_db(db):
 ###########################################################################
 ###########################################################################
 ###########################################################################
+def test():
+    reload( db_api )
+    db = MySQLdb.connect(read_default_file="/home/hroest/.my.cnf")
+    c = db.cursor()
+    result = db_api.db_get_articles_in_category_object( 'de' , 'Schweiz', 
+                                                       c, depth = -100 )
+    ids = [page.id for page in result]
+    c.executemany( "insert into  u_hroest.pages_schweiz (id_page) values (%s)", 
+                      ids)
 
 def quick_fix_db():
     cursor = replag_lib.revlag_color_cursor_all(db)
