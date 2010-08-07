@@ -4,3 +4,7 @@
 *.log
 magnus
 buffer
+postReviewedPagesandTables.sh
+optinHash.py
+ignores
+private_access
