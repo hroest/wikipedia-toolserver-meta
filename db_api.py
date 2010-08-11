@@ -1,7 +1,11 @@
+"""
+This module is a python API to the toolserver database.
+"""
 import datetime, time
 import MySQLdb
 
 class UnFlagged():
+    """Class to hold a page and its revision info"""
     def __init__(self): pass
     def initialize_with_db( self, l ):
         self.page_nr = l[0]
