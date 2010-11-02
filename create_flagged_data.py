@@ -43,23 +43,7 @@ def create_data_daily(db, year, month, day, slow_ok = True):
     """ % (year, month, day, slow_ok_text[slow_ok] )
 
     myfile = path + 'all_month_day%s%02d%02d'% (year, month, day )
-    #_create_data(db, query, myfile)
-    f = open(myfile + '_tmp', 'w')
-    print "writing into " , f.name
-    cursor = db.cursor()
-    cursor.execute( query )
-    rows = cursor.fetchall()
-    f.write( 'count(*)\tfr_user\n' )
-    for r in rows:
-        f.write( '%s\t%s\n' % (r[0], r[1]) )
-    f.close()
-
-    #after closing we move the tmp file to the real location
-    import os
-    print 'moving now'
-    cmd  = 'mv %s %s' % (myfile + '_tmp', myfile )
-    print cmd
-    os.system( cmd )
+    _create_data(db, query, myfile)
 
 def create_data_monthly(db, year, month, slow_ok = True):
     """Creates the files with the per-month data in it. """
@@ -76,23 +60,7 @@ def create_data_monthly(db, year, month, slow_ok = True):
     """ % (year, month, slow_ok_text[slow_ok])
 
     myfile = path + 'all_month_users_%s%02d'% (year, month )
-    #_create_data(db, query, myfile)
-    f = open(myfile + '_tmp', 'w')
-    print "writing into " , f.name
-    cursor = db.cursor()
-    cursor.execute( query )
-    rows = cursor.fetchall()
-    f.write( 'count(*)\tfr_user\n' )
-    for r in rows:
-        f.write( '%s\t%s\n' % (r[0], r[1]) )
-    f.close()
-
-    #after closing we move the tmp file to the real location
-    import os
-    print 'moving now'
-    cmd  = 'mv %s %s' % (myfile + '_tmp', myfile )
-    print cmd
-    os.system( cmd )
+    _create_data(db, query, myfile)
 
 def create_data_all_year(db, year, slow_ok = True):
     """Creates the files with per-month data in it. """
