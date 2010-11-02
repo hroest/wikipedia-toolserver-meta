@@ -43,6 +43,7 @@ def create_data_daily(db, year, month, day, slow_ok = True):
     """ % (year, month, day, slow_ok_text[slow_ok] )
 
     myfile = path + 'all_month_day%s%02d%02d'% (year, month, day )
+    #_create_data(db, query, myfile)
     f = open(myfile + '_tmp', 'w')
     print "writing into " , f.name
     cursor = db.cursor()
@@ -75,6 +76,7 @@ def create_data_monthly(db, year, month, slow_ok = True):
     """ % (year, month, slow_ok_text[slow_ok])
 
     myfile = path + 'all_month_users_%s%02d'% (year, month )
+    #_create_data(db, query, myfile)
     f = open(myfile + '_tmp', 'w')
     print "writing into " , f.name
     cursor = db.cursor()
@@ -92,6 +94,39 @@ def create_data_monthly(db, year, month, slow_ok = True):
     print cmd
     os.system( cmd )
 
+def create_data_all_year(db, year, slow_ok = True):
+    """Creates the files with per-month data in it. """
+
+    query = \
+    """
+    select count(*),fr_user from dewiki_p.flaggedrevs 
+    where 
+    fr_flags = 'dynamic'
+    and fr_timestamp like '%s%%'
+    group by fr_user
+    order by count(*)
+    %s
+    """ % (year, slow_ok_text[slow_ok])
+
+    myfile = path + 'all_year_users_%s' % year
+    _create_data(db, query, myfile)
+
+def create_data_all_time(db, slow_ok = True):
+    """Creates the files with all time data in it. """
+
+    query = \
+    """
+    select count(*),fr_user from dewiki_p.flaggedrevs 
+    where 
+    fr_flags = 'dynamic'
+    group by fr_user
+    order by count(*)
+    %s
+    """ % (slow_ok_text[slow_ok])
+
+    myfile = path + 'all_time'
+    _create_data(db, query, myfile)
+
 def create_data_monthly_cat(db, year, month, cat, slow_ok = True):
     """Creates the files with the per-month data in it. Restricted to one cat"""
 
@@ -108,6 +143,25 @@ def create_data_monthly_cat(db, year, month, cat, slow_ok = True):
     """ % (year, month, "u_hroest.pages_" + cat, slow_ok_text[slow_ok])
 
     myfile = path + 'all_month_users_%s%02d%s'% (year, month, cat)
+    #_create_data(db, query, myfile)
+    f = open(myfile + '_tmp', 'w')
+    print "writing into " , f.name
+    cursor = db.cursor()
+    cursor.execute( query )
+    rows = cursor.fetchall()
+    f.write( 'count(*)\tfr_user\n' )
+    for r in rows:
+        f.write( '%s\t%s\n' % (r[0], r[1]) )
+    f.close()
+
+    #after closing we move the tmp file to the real location
+    import os
+    print 'moving now'
+    cmd  = 'mv %s %s' % (myfile + '_tmp', myfile )
+    print cmd
+    os.system( cmd )
+
+def _create_data(db, query, myfile):
     f = open(myfile + '_tmp', 'w')
     print "writing into " , f.name
     cursor = db.cursor()

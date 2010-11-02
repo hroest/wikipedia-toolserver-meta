@@ -56,6 +56,10 @@ if today.day < 3:
         old_year = this_year - 1
     create_flagged_data.create_data_monthly( db, old_year, old_month )
     logfile.write( '\tupdated flagged files for %s%s\n' % (old_year, old_month))
+    create_flagged_data.create_data_monthly_cat( db, old_year, old_month, 'Schweiz' )
+    logfile.write( '\tupdated flagged files for Schweiz %s%s\n' % (old_year, old_month))
+create_flagged_data.create_data_all_year(db, old_year, slow_ok = True); create_flagged_data.create_data_all_time(db, slow_ok = True)
+    logfile.write( '\tupdated flagged files all time and year %s\n' % (old_year))
 
 now = datetime.datetime.now()
 logfile.write( '\tend time %s\n' % now)

@@ -301,7 +301,7 @@ def _revlag_color_plot(lines, plot_nr=0,plotsize=800):
 
     set xlabel "Datum (H:d-m-Y)"
     set ylabel "Anzahl Artikel"
-    set key outside 
+    set key outside above
     set tics out
     set title "Verteilung des Alters der ungesichteten Änderungen über Zeit"
     set output "%(pic_file)s"
@@ -363,6 +363,10 @@ def insert_db(db):
     P95 = timestamps[ len(timestamps) * 1 / 20 ]
     mean = sum(timestamps) / len( timestamps )
     timestamp = time.mktime(now.timetuple())
+    #find first 0 in myHist
+    for i,j in enumerate(myHist):
+        if j==0: break
+    myHist = myHist[:i]
     mydist = 'myHist = ' + str(myHist)
     #
     query = """
