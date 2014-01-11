@@ -365,22 +365,27 @@ def _revlag_color_plot(lines, plot_nr=0,plotsize=800):
     os.system("rm %s" % plot_name)
     os.system("rm %s" % data_file)
 
+def never_reviewed_pages_count(db):
+    return len(never_reviewed_pages(db))
+
 def never_reviewed_pages(db):
     """Get the number of never reviewed articles at the current timepoint from the db."""
 
     query = """
     #select all articles that were never reviewed
-    select count(*) from dewiki_p.page 
+    #1 min 20, 335
+    select page_id, page_title from dewiki_p.page 
     #not flagged
     where page_id not in (select distinct fp_page_id from dewiki_p.flaggedpages)
-    #not a redirection
-    and page_id not in (select distinct rd_from from dewiki_p.redirect)
+    #not a redirect
+    and page_is_redirect = 0
+    #and page_id not in (select distinct rd_from from dewiki_p.redirect)
     #and in article namespace
     and page_namespace = 0;
     """ 
     c = db.cursor()
     c.execute( query )
-    return c.fetchone()[0]
+    return c.fetchall()
 
 def insert_db(db):
     """This functions inserts the current lag distribution into the db.
