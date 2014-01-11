@@ -387,7 +387,7 @@ def never_reviewed_pages(db):
     c.execute( query )
     return c.fetchall()
 
-def insert_db(db):
+def insert_db(db, logfile=None):
     """This functions inserts the current lag distribution into the db.
     
     It will populate u_hroest.replag and u_hroest.replagExtended with 
@@ -396,17 +396,13 @@ def insert_db(db):
     """
     cursor = db.cursor()
     now = datetime.datetime.now()
-    never_reviewed = never_reviewed_pages(db)
-    lines, myHist, timestamps, query_time = execute_unreviewed_changes_query(db)
+    never_reviewed = never_reviewed_pages_count(db)
+    lines, myHist, timestamps, query_time = execute_unreviewed_changes_query(db, logfile)
     median = timestamps[ len(timestamps) / 2 ]
     P75 = timestamps[ len(timestamps) * 1 / 4 ]
     P95 = timestamps[ len(timestamps) * 1 / 20 ]
     mean = sum(timestamps) / len( timestamps )
     timestamp = time.mktime(now.timetuple())
-    #find first 0 in myHist
-    for i,j in enumerate(myHist):
-        if j==0: break
-    myHist = myHist[:i]
     mydist = 'myHist = ' + str(myHist)
     #
     query = """
