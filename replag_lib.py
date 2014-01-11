@@ -1,5 +1,28 @@
  # -*- coding: utf-8  -*-
 
+"""
+/**
+ * Library for replication lag functions.
+ *
+ * Copyright (C) 2010 Hannes Röst <Firstname><Lastname>@gmx.ch
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ */
+"""
+
+
 import time
 import datetime 
 gnuplot_path = 'gnuplot'
@@ -43,7 +66,7 @@ class revlag:
         exec( l[0] )
         self.timestamps = timestamps
 
-def execute_unreviewed_changes_query(db):
+def execute_unreviewed_changes_query(db, logfile=None):
     query = """
         SELECT page_id,page_title,page_latest,fp_stable, rev_len, rev_timestamp
         FROM page,flaggedpages, revision
@@ -74,7 +97,13 @@ def execute_unreviewed_changes_query(db):
         ll = l[-1]
         tuple = time.strptime(ll, "%Y%m%d%H%M%S")
         unix_lag = now_unix - time.mktime( tuple ) 
-        myHist[ int(unix_lag) / (3600* resolution_hrs ) ] += 1
+        try:
+          myHist[ int(unix_lag) / (3600* resolution_hrs ) ] += 1
+        except IndexError:
+            try:
+              logfile.write( "\n\t\tindex error %s\n" % l[1] )
+            except Exception:
+              logfile.write( "\n\t\tindex error, unknown file\n" )
         timestamps.append( unix_lag )
 
     #shorten myHist a bit so that there are fewer zeros
