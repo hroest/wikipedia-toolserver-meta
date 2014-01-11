@@ -1,0 +1,144 @@
+idea: also count the # of articles
+
++------------------------+
+| Tables_in_dewiki_p     |
++------------------------+
+| abuse_filter           |
+| abuse_filter_history   |
+| abuse_filter_log       |
+| archive                |
+| category               |
+| categorylinks          |
+| change_tag             |
+| click_tracking         |
+| click_tracking_events  |
+| cur                    |
+| externallinks          |
+| filearchive            |
+| flaggedpages           |
+| flaggedrevs            |
+| hitcounter             |
+| image                  | 
+| imagelinks             | 
+| interwiki              | 
+| ipblocks               | 
+| langlinks              | 
+| logging                | 
+| logging_ts_alternative | 
+| math                   | 
+| oldimage               | 
+| page                   | 
+| page_props             | 
+| page_restrictions      | 
+| pagelinks              | 
+| prefstats              | 
+| protected_titles       | 
+| recentchanges          | 
+| redirect               | 
+| revision               | 
+| securepoll_elections   | 
+| securepoll_entity      | 
+| securepoll_msgs        | 
+| securepoll_options     | 
+| securepoll_properties  | 
+| securepoll_questions   | 
+| securepoll_votes       | 
+| site_stats             | 
+| spoofuser              | 
+| tag_summary            | 
+| templatelinks          | 
+| text                   | 
+| updates                | 
+| user                   | 
+| user_daily_contribs    | 
+| user_groups            | 
+| user_ids               | 
+| valid_tag              | 
+| watchlist              | 
++------------------------+
+
+
+
+mysql> desc revision;
++----------------+---------------------+------+-----+---------+-------+
+| Field          | Type                | Null | Key | Default | Extra |
++----------------+---------------------+------+-----+---------+-------+
+| rev_id         | int(8) unsigned     | NO   |     | 0       |       | 
+| rev_page       | int(8) unsigned     | NO   |     | 0       |       | 
+| rev_text_id    | int(8) unsigned     | NO   |     | 0       |       | 
+| rev_comment    | varbinary(255)      | NO   |     |         |       | 
+| rev_user       | int(5) unsigned     | NO   |     | 0       |       | 
+| rev_user_text  | varchar(255)        | NO   |     |         |       | 
+| rev_timestamp  | varchar(14)         | NO   |     |         |       | 
+| rev_minor_edit | tinyint(1) unsigned | NO   |     | 0       |       | 
+| rev_deleted    | tinyint(1) unsigned | NO   |     | 0       |       | 
+| rev_len        | int(8) unsigned     | YES  |     | NULL    |       | 
+| rev_parent_id  | int(8) unsigned     | YES  |     | NULL    |       | 
++----------------+---------------------+------+-----+---------+-------+
+11 rows in set (0.01 sec)
+
+rev_user = 0 //means anonymous
+
+mysql> desc flaggedpages;
++-------------+------------+------+-----+---------+-------+
+| Field       | Type       | Null | Key | Default | Extra |
++-------------+------------+------+-----+---------+-------+
+| fp_page_id  | int(11)    | NO   |     | 0       |       | 
+| fp_reviewed | tinyint(1) | NO   |     | 0       |       | 
+| fp_stable   | int(11)    | YES  |     | NULL    |       | 
+| fp_quality  | tinyint(1) | YES  |     | NULL    |       | 
++-------------+------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> desc flaggedrevs;
++--------------+-------------+------+-----+---------+-------+
+| Field        | Type        | Null | Key | Default | Extra |
++--------------+-------------+------+-----+---------+-------+
+| fr_page_id   | int(11)     | NO   |     | 0       |       | 
+| fr_rev_id    | int(11)     | NO   |     | 0       |       | 
+| fr_user      | int(5)      | NO   |     | 0       |       | 
+| fr_timestamp | varchar(14) | NO   |     |         |       | 
+| fr_comment   | mediumblob  | NO   |     | NULL    |       | 
+| fr_quality   | tinyint(1)  | NO   |     | 0       |       | 
+| fr_tags      | mediumblob  | NO   |     | NULL    |       | 
+| fr_text      | mediumblob  | NO   |     | NULL    |       | 
+| fr_flags     | tinyblob    | NO   |     | NULL    |       | 
++--------------+-------------+------+-----+---------+-------+
+
+select * from user where user_name = 'Hannes Röst';
++---------+--------------+-------------------+----------------+
+| user_id | user_name    | user_registration | user_editcount |
++---------+--------------+-------------------+----------------+
+|  352933 | Hannes Röst | 20070212004904    |          11289 | 
++---------+--------------+-------------------+----------------+
+
+#takes 6 minutes
+select count(*) from flaggedrevs where fr_user = 352933;
+
+select * from flaggedpages where fp_page_id = 137;
+
+
+###Achtung, die MySQL datenbank verwendet die GMT und ist 2h daneben
+###deshalb koennen die Monatszahlen auch manchmal nicht ganz genau stimmen
+\tdynamic\n    #von Hand gesichtet
+dynamic,auto   #automatisch gesichtet
+utf-8,dynamic 
+
+9551   \tdynamic\n
+1872   dynamic,auto
+3935   utf-8,dynamic 
+15358
+
+
+201004.\{,100\}\tdynamic\n
+201004.\{,100\}dynamic,auto
+201004.\{,100\}utf-8,dynamic
+
+
+
+select * from revision inner join page on revision.rev_page = 
+page.page_id where rev_id = 72675195 ;
+
+
+
+Martinas question: how often is reverted?
