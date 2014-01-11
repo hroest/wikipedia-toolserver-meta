@@ -27,6 +27,7 @@ def get_lock_age():
     age = f.read()
     now = datetime.datetime.now()
     now_unix = time.mktime( now.timetuple()  )  
+    f.close()
     return now_unix - int( float(age) )
 
 def release_pywiki_lock():
