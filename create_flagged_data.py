@@ -35,7 +35,7 @@ def create_data_daily(db, year, month, day, slow_ok = True):
     """
     select count(*),fr_user from dewiki_p.flaggedrevs 
     where 
-    fr_flags = 'dynamic'
+    ( fr_flags = 'dynamic' or fr_flags = ',dynamic' )
     and fr_timestamp like '%s%02d%02d%%'
     group by fr_user
     order by count(*)
@@ -52,7 +52,7 @@ def create_data_monthly(db, year, month, slow_ok = True):
     """
     select count(*),fr_user from dewiki_p.flaggedrevs 
     where 
-    fr_flags = 'dynamic'
+    ( fr_flags = 'dynamic' or fr_flags = ',dynamic' )
     and fr_timestamp like '%s%02d%%'
     group by fr_user
     order by count(*)
@@ -69,7 +69,7 @@ def create_data_all_year(db, year, slow_ok = True):
     """
     select count(*),fr_user from dewiki_p.flaggedrevs 
     where 
-    fr_flags = 'dynamic'
+    ( fr_flags = 'dynamic' or fr_flags = ',dynamic' )
     and fr_timestamp like '%s%%'
     group by fr_user
     order by count(*)
@@ -86,7 +86,7 @@ def create_data_all_time(db, slow_ok = True):
     """
     select count(*),fr_user from dewiki_p.flaggedrevs 
     where 
-    fr_flags = 'dynamic'
+    ( fr_flags = 'dynamic' or fr_flags = ',dynamic' )
     group by fr_user
     order by count(*)
     %s
@@ -102,7 +102,7 @@ def create_data_monthly_cat(db, year, month, cat, slow_ok = True):
     """
     select count(*),fr_user from dewiki_p.flaggedrevs 
     where 
-    fr_flags = 'dynamic'
+    ( fr_flags = 'dynamic' or fr_flags = ',dynamic' )
     and fr_timestamp like '%s%02d%%'
     and fr_page_id in (select * from %s)
     group by fr_user
