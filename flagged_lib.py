@@ -31,3 +31,31 @@ def create_lagging_user(db):
     cursor.execute( query )
     cursor.execute( 'commit;' )
 
+
+def create_never_reviewed(db):
+    cursor = db.cursor()
+    now = datetime.datetime.now()
+    timestamp = time.mktime(now.timetuple())
+    #
+    cursor.execute('drop table if exists u_hroest.never_review ')
+    query = """
+    create table u_hroest.never_review as 
+    select page_title, page_id, rev_user, rev_timestamp,
+    %s as updated_at 
+    from dewiki_p.page  p
+    inner join dewiki_p.revision r on r.rev_page = p.page_id
+    #not flagged
+    where page_id not in (select distinct fp_page_id from dewiki_p.flaggedpages)
+    #not a redirect
+    and page_is_redirect = 0
+    #and page_id not in (select distinct rd_from from dewiki_p.redirect)
+    #and in article namespace
+    and page_namespace = 0
+    group by page_id
+    order by page_id, rev_timestamp DESC
+    %s
+    """ %  (int(timestamp) , create_flagged_data.slow_ok_text[True])
+    #
+    #f = open('tmp_mysql.query', 'w'); f.write( query ); f.close()
+    cursor.execute( query )
+    cursor.execute( 'commit;' )
