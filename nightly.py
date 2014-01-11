@@ -1,11 +1,15 @@
 #!/usr/bin/python 
+#$ -N hroest_nightly
+#$ -l sqlprocs-s1=1
+
+#command to submit:
+#qsub -l sqlprocs-s2=1 nightly.py 
+
+
 import datetime
 import time 
 import MySQLdb
 import os
-
-
-
 
 import sys
 sys.path.append( '/home/hroest/')
