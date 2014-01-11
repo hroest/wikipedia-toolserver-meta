@@ -434,7 +434,8 @@ def insert_db(db, logfile=None):
      """ % ( last_id, mytime)
     cursor.execute( query )
     cursor.execute( 'commit;' )
-    #select r_replag_id, uncompress(r_timestamps) from u_hroest.replagExtended;
+    return 
+
 
 ###########################################################################
 ###########################################################################
