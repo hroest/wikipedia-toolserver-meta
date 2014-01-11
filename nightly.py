@@ -41,18 +41,18 @@ create_flagged_data.create_data_monthly( db, this_year, this_month )
 logfile.write( '\tupdated flagged files for %s%s\n' % (this_year, this_month) )
 
 #do the stats for yesterday
-create_flagged_data.create_data_daily( db, this_year, this_month, this_day -1 )
-logfile.write( '\tupdated flagged files for %s%s%s\n' % (this_year, 
-                                         this_month, this_day -1) )
+#create_flagged_data.create_data_daily( db, this_year, this_month, this_day -1 )
+#logfile.write( '\tupdated flagged files for %s%s%s\n' % (this_year, 
+#                                         this_month, this_day -1) )
 
 latest_file = '/home/hroest/flagged_data/latest_actualisation' 
 f = open(latest_file , 'w'); 
 f.write( str( now ) + '\n'  ) 
 f.close() 
 
-
 #every new month we need to do the old month for good
 if today.day < 3: 
+#if True:
     old_month = this_month -1 
     old_year = this_year
     if old_month == 0:
@@ -60,11 +60,21 @@ if today.day < 3:
         old_year = this_year - 1
     create_flagged_data.create_data_monthly( db, old_year, old_month )
     logfile.write( '\tupdated flagged files for %s%s\n' % (old_year, old_month))
-    create_flagged_data.create_data_monthly_cat( db, old_year, old_month, 'Schweiz' )
+    #Person is too big
+    cats = ['Schweiz', 'Chemie', 'Musik', 'Informatik', 'Religion', ] 
+    for cat in cats:
+        create_flagged_data.create_cat_tables( db, cat)
+        logfile.write( '\tcategory done for %s\n' % cat)
+        try: create_flagged_data.create_data_monthly_cat( db, old_year, old_month, cat)
+        except Exception:
+            logfile.write( '\tAborted: \n' % (cat))
+            print '\tAborted: \n' % cat
     logfile.write( '\tupdated flagged files for Schweiz %s%s\n' % (old_year, old_month))
-create_flagged_data.create_data_all_year(db, old_year, slow_ok = True); create_flagged_data.create_data_all_time(db, slow_ok = True)
+    create_flagged_data.create_data_all_year(db, old_year, slow_ok = True)
+    create_flagged_data.create_data_all_time(db, slow_ok = True)
     logfile.write( '\tupdated flagged files all time and year %s\n' % (old_year))
 
 now = datetime.datetime.now()
 logfile.write( '\tend time %s\n' % now)
 logfile.close()
+
