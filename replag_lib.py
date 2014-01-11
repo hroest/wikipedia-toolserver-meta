@@ -113,6 +113,12 @@ def execute_unreviewed_changes_query(db, logfile=None):
         i += 1
     myHist = myHist[ : 1000-i]
 
+    #this is somewhat of a hack since sometimes we have weird artefacts
+    #find first 0 in myHist
+    for i,j in enumerate(myHist):
+        if j==0: break
+    myHist = myHist[:i]
+
     return lines, myHist, timestamps, query_time
 
 def create_hist_from_timestamps( timestamps, resolution_hrs):
