@@ -27,7 +27,7 @@ logfile = open('/home/hroest/quarter-hourly.log', 'a')
 logfile.write( '\nrun started:\n')
 logfile.write( '\tstart time %s\n' % now)
 
-replag_lib.insert_db( db )
+replag_lib.insert_db(db, logfile)
 logfile.write( '\tinserted row into db\n' )
 
 os.system( 'touch /home/hroest/public_html/tmp/pics/tmp_mytmptmp')
@@ -36,8 +36,12 @@ logfile.write( '\tdeleted all pics like tmp/pics/tmp*\n' )
 #get rid of a lock that is older than an hour
 general_lib.release_pywiki_lock_if_older_than(3600)
 
-flagged_lib.create_lagging_user(db);
-logfile.write( '\tcreated lagging user table\n' )
+flagged_lib.create_lagging_user(db)
+now = datetime.datetime.now()
+logfile.write( '\tcreated lagging user table %s\n' % now )
+now = datetime.datetime.now()
+flagged_lib.create_never_reviewed(db)
+logfile.write( '\tcreated unflagged pages table %s\n' % now )
 
 now = datetime.datetime.now()
 logfile.write( '\tend time %s\n' % now)
