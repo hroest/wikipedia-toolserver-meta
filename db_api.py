@@ -6,15 +6,25 @@ import MySQLdb
 
 class UnFlagged():
     """Class to hold a page and its revision info"""
-    def __init__(self): pass
+
+    def __init__(self): 
+        self.error = False
+
     def initialize_with_db( self, l ):
         self.page_nr = l[0]
         self.page_title = l[1]
         self.latest = l[2]
         self.stable = l[3]
+
     def get_unflagged(self, c):
         all_revisions = get_all_revisions( c, self.page_nr) 
         unflagged = [ rev for rev in reversed( all_revisions ) if rev[0] > self.stable]
+        # Sometimes we have an error
+        if len(unflagged) == 0:
+            self.first_time  = datetime.datetime.now()
+            self.error = True
+            return 
+
         self.first_unflagged = unflagged[-1]
         first_time  = self.first_unflagged[6]
         #now = datetime.datetime.now()
