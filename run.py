@@ -25,8 +25,10 @@ insert_db( db )
 
 """
 
-drop table u_hroest.replag;
-create table u_hroest.replag (
+create database s51801__hroest;
+
+drop table s51801__hroest.replag;
+create table s51801__hroest.replag (
  r_id int auto_increment primary key,
  r_timestamp int,
  r_daily_distr text,
@@ -41,7 +43,7 @@ create table u_hroest.replag (
 alter table u_hroest.replag add index(r_timestamp);
 
 
-create table u_hroest.replagExtended (
+create table s51801__hroest.replagExtended (
  r_replag_id int primary key,
  r_timestamps text
 );

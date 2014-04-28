@@ -1,11 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8  -*-
 
-pywiki_lock_location = '/home/hroest/locks/pywikilock'
+pywiki_lock_location = '/data/project/hroest2/locks/pywikilock'
 import os.path
 import datetime
 import time
 
+root = "/data/project/hroest2/"
+flagged_data_path = os.path.join(root, 'flagged_data/')
+database_name = "s51801__hroest"
+mysql_config_file = os.path.join(root, 'replica.my.cnf')
+mysql_host = 'dewiki.labsdb'
 
 def acquire_pywiki_lock():
     if os.path.isfile( pywiki_lock_location ): return False

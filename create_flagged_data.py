@@ -25,7 +25,7 @@ import db_api
 ##create_flagged_data.create_cat_tables( db, 'Chemie' )
 #create_flagged_data.create_data_monthly_cat( db, 2010, 5, 'Chemie' )
 
-path = '/home/hroest/flagged_data/'
+from general_lib import flagged_data_path as path
 slow_ok_text = { True : " /* SLOW_OK */ " , False : "" }
 
 def create_data_daily(db, year, month, day, slow_ok = True):

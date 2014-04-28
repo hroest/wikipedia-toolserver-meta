@@ -10,6 +10,8 @@ import os, sys
 import sys
 sys.path.append( '/home/hroest/')
 sys.path.append( '/home/hroest/scripts/')
+sys.path.append( '/data/project/hroest2/meta' )
+sys.path.append( '/data/project/hroest2/bot/pywikibot-compat/' )
 import create_flagged_data
 import replag_lib
 import general_lib
@@ -19,19 +21,18 @@ today = datetime.date.today()
 now = datetime.datetime.now()
 this_year = today.year
 this_month = today.month
-
-db = MySQLdb.connect(read_default_file="/home/hroest/.my.cnf")
+db = MySQLdb.connect(read_default_file=general_lib.mysql_config_file, host=general_lib.mysql_host)
 
 ###########################################################################
-logfile = open('/home/hroest/quarter-hourly.log', 'a')
+logfile = open('%s/logs/quarter-hourly.log' % general_lib.root, 'a')
 logfile.write( '\nrun started:\n')
 logfile.write( '\tstart time %s\n' % now)
 
 replag_lib.insert_db(db, logfile)
 logfile.write( '\tinserted row into db\n' )
 
-os.system( 'touch /home/hroest/public_html/tmp/pics/tmp_mytmptmp')
-os.system( 'rm /home/hroest/public_html/tmp/pics/tmp*')
+os.system( 'touch %s/public_html/tmp/pics/tmp_mytmptmp' % general_lib.root)
+os.system( 'rm %s/public_html/tmp/pics/tmp*' % general_lib.root)
 logfile.write( '\tdeleted all pics like tmp/pics/tmp*\n' )
 #get rid of a lock that is older than an hour
 general_lib.release_pywiki_lock_if_older_than(3600)

@@ -26,11 +26,13 @@
 import time
 import datetime 
 gnuplot_path = 'gnuplot'
+import general_lib
+from general_lib import database_name as myDB
 
 def execute_unreviewed_changes_query_fromCache(db):
     cursor = db.cursor()
     cursor.execute( 
-        'select * from u_hroest.replag order by r_timestamp desc limit 1')
+        'select * from %s.replag order by r_timestamp desc limit 1' % (myDB))
     lines = cursor.fetchall()
     l = lines[0] #expect one result
     r = revlag( l )
@@ -59,8 +61,8 @@ class revlag:
         cursor = db.cursor()
         cursor.execute( 
             """select uncompress(r_timestamps) 
-                from u_hroest.replagExtended 
-                where r_replag_id = %s""" % self.id)
+                from %s.replagExtended 
+                where r_replag_id = %s""" % (myDB, self.id) )
         lines = cursor.fetchall()
         l = lines[0] #expect one result
         exec( l[0] )
@@ -240,9 +242,9 @@ def revlag_color_cursor_month(db, year, month):
 
     start_unix = time.mktime( start.timetuple() )  
     end_unix = time.mktime( end.timetuple() )  - 1 #the new month minus one sec
-    cursor.execute( """ select * from u_hroest.replag 
+    cursor.execute( """ select * from %s.replag 
                    where r_timestamp between %s and %s""" %
-          (start_unix, end_unix )  )
+          (myDB, start_unix, end_unix )  )
     return cursor
 
 def revlag_color_cursor_lastseconds(db, seconds = 3600):
@@ -250,8 +252,8 @@ def revlag_color_cursor_lastseconds(db, seconds = 3600):
     now = datetime.datetime.now()
     now_unix = time.mktime( now.timetuple() )  
     time_ago = now_unix - ( seconds )
-    cursor.execute( 'select * from u_hroest.replag where r_timestamp > %s' %
-                  time_ago )
+    cursor.execute( 'select * from %s.replag where r_timestamp > %s' %
+                  (myDB, time_ago) )
     return cursor
 
 def revlag_color_cursor_lastweek(db):
@@ -259,8 +261,8 @@ def revlag_color_cursor_lastweek(db):
     now = datetime.datetime.now()
     now_unix = time.mktime( now.timetuple() )  
     time_ago = now_unix - (7 * 24 * 3600)
-    cursor.execute( 'select * from u_hroest.replag where r_timestamp > %s' %
-                  time_ago )
+    cursor.execute( 'select * from %s.replag where r_timestamp > %s' %
+                  (myDB, time_ago))
     return cursor
 
 def revlag_color_cursor_last24h(db):
@@ -268,19 +270,19 @@ def revlag_color_cursor_last24h(db):
     now = datetime.datetime.now()
     now_unix = time.mktime( now.timetuple() )  
     time_ago = now_unix - (24 * 3600)
-    cursor.execute( 'select * from u_hroest.replag where r_timestamp > %s' %
-                  time_ago )
+    cursor.execute( 'select * from %s.replag where r_timestamp > %s' %
+                  (myDB, time_ago))
     return cursor
 
 def revlag_color_cursor_all(db):
     cursor = db.cursor()
-    cursor.execute( 'select * from u_hroest.replag' )
+    cursor.execute( 'select * from %s.replag' % (myDB) )
     return cursor
 
 def revlag_color_lines_allXh(db, all_hours=6):
     all_replicates = int( all_hours * 4 )
     cursor = db.cursor()
-    cursor.execute( 'select * from u_hroest.replag' )
+    cursor.execute( 'select * from %s.replag' % (myDB) )
     lines = cursor.fetchall()
     return lines[::all_replicates] 
 
@@ -390,7 +392,7 @@ def never_reviewed_pages(db):
 def insert_db(db, logfile=None):
     """This functions inserts the current lag distribution into the db.
     
-    It will populate u_hroest.replag and u_hroest.replagExtended with 
+    It will populate replag and replagExtended with 
     some summary statistics values and the compressed whole timestamps of 
     all unreviewed changes, from which the distribution can be recovered.
     """
@@ -406,7 +408,7 @@ def insert_db(db, logfile=None):
     mydist = 'myHist = ' + str(myHist)
     #
     query = """
-    insert into u_hroest.replag (
+    insert into %s.replag (
      r_timestamp,
      r_daily_distr,
      r_median,
@@ -416,7 +418,7 @@ def insert_db(db, logfile=None):
      r_unreviewed,
      r_neverreviewed
     ) VALUES (%s, '%s',  %s,%s,%s,%s,%s,%s)
-    """ % ( int(timestamp) , mydist, median, 
+    """ % ( myDB, int(timestamp) , mydist, median, 
            P75, P95, mean, 
            len( timestamps ), never_reviewed)
     #
@@ -427,11 +429,11 @@ def insert_db(db, logfile=None):
     #
     mytime = 'timestamps = ' + str(timestamps)
     query = """
-    insert into u_hroest.replagExtended (
+    insert into %s.replagExtended (
      r_replag_id ,
      r_timestamps 
      )  VALUES (%s, compress('%s') )
-     """ % ( last_id, mytime)
+     """ % (myDB, last_id, mytime)
     cursor.execute( query )
     cursor.execute( 'commit;' )
     return 
@@ -442,13 +444,13 @@ def insert_db(db, logfile=None):
 ###########################################################################
 def test():
     reload( db_api )
-    db = MySQLdb.connect(read_default_file="/home/hroest/.my.cnf")
+    db = MySQLdb.connect(read_default_file=general_lib.mysql_config_file, host=general_lib.mysql_host)
     c = db.cursor()
     result = db_api.db_get_articles_in_category_object( 'de' , 'Schweiz', 
                                                        c, depth = -100 )
     ids = [page.id for page in result]
-    c.executemany( "insert into  u_hroest.pages_schweiz (id_page) values (%s)", 
-                      ids)
+    c.executemany( "insert into  %s.pages_schweiz (id_page) values (%s)", 
+                      (myDB, ids) )
 
 def quick_fix_db():
     cursor = replag_lib.revlag_color_cursor_all(db)
@@ -474,7 +476,7 @@ def quick_fix_db():
         neverreviewed =     l[8]
         mydist = 'myHist = ' + str(myHist)
         query = """
-        insert into u_hroest.replag(
+        insert into %s.replag(
          r_timestamp,
          r_daily_distr,
          r_median,
@@ -484,7 +486,7 @@ def quick_fix_db():
          r_unreviewed,
          r_neverreviewed
         ) VALUES (%s, '%s',  %s,%s,%s,%s,%s,%s)
-        """ % ( int(timestamp) , mydist, median, 
+        """ % ( myDB, int(timestamp) , mydist, median, 
                P75, P95, mean, 
                unreviewed, neverreviewed)
         cursor.execute( query) 
